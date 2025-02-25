@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>用户登录</title>
+
+</head>
+
+<body>
+
+<div id="loginDiv" style="height: 400px">
+    <el-form ref="user" :model="user" label-width="80px">
+
+        <h1 id="loginMsg" style="font-family: 宋体;">排 课 系 统</h1>
+        <el-form-item label="用户名:" prop="userName">
+            <el-input v-model="user.userName" style="margin-left: 15px"></el-input>
+        </el-form-item>
+        <el-form-item label="密码:" prop="password">
+            <el-input v-model="user.password" type="password"  style="margin-left: 15px"></el-input>
+        </el-form-item>
+
+        <el-form-item label="验证码:" prop="checkCode">
+            <el-row>
+                <el-col :span="12">
+                    <el-input v-model="user.checkCode" style="margin-left:15px;width:100px"></el-input>
+                </el-col>
+                <el-col :span="12" align="center ">
+                    <img v-bind:src="checkCodeImg" id="checkImg" @click="changeImg"
+                         style="margin-left:15px ;height:40px">
+                </el-col>
+            </el-row>
+        </el-form-item>
+
+        <div align="center">
+            <el-button type="primary" @click="login">登录</el-button>
+            <el-button type="info" @click="resetForm()">重置</el-button>
+        </div>
+
+        <div align="right" style="width: 100%;margin-left: 50px ">
+            <el-link :underline="false" @click="changeUser" style="color:#ffd04b">教师登录</el-link>
+        </div>
+
+    </el-form>
+
+
+</div>
+
+
+<!--导入资源-->
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+<link href="css/login.css" rel="stylesheet">
+<script src="js/axios-0.18.0.js"></script>
+
+<script>
+
+
+    //创建vue核心对象
+    new Vue({
+        el: "#loginDiv",
+        //钩子函数
+        mounted() {
+
+            let split = (location + "").split("?")[1];
+            if (split == 1) {
+                this.$message({
+                    message: "您尚未登录！",
+                    type: "error",
+                    center: true
+                })
+            }
+        },
+
+        methods: {
+            //刷新验证码
+            changeImg() {
+                this.checkCodeImg = "/user/checkCode?" + new Date().getMilliseconds()
+            },
+
+            //提交表单
+            login() {
+                //表单验证
+                var _this = this;
+                if (this.checkForm() == false) {
+                    this.$message({
+                        message: _this.errorMsg,
+                        type: "error",
+                        center: true
+                    })
+                } else {
+                    //异步请求
+                    axios({
+                        method: "post",
+                        url: "http://localhost:8080/user/login?checkCode=" + _this.user.checkCode,
+                        data: _this.user
+                    }).then(resp => {
+                        if (resp.data == "success") {
+                            //防止缓存！
+                            location.href = "http://localhost:8080/index.html?" + new Date().getMilliseconds();
+                        } else {
+                            this.$message({
+                                message: resp.data,
+                                type: "error",
+                                center: true
+                            })
+                        }
+                    })
+                }
+            },
+
+            //重置表单
+            resetForm() {
+                this.$refs["user"].resetFields();
+            },
+
+            //表单验证
+            checkForm() {
+                //获取模型
+                var name = this.user.userName;
+                var password = this.user.password;
+                var checkCode = this.user.checkCode;
+                if (name == 0) {
+                    this.errorMsg = "请输入用户名";
+                    return false;
+                } else if (name.length > 8 || name.length < 3) {
+                    this.errorMsg = "用户名长度为 3 到 8 个字符";
+                    return false;
+                }
+                if (password.length == 0) {
+                    this.errorMsg = "请输入密码";
+                    return false;
+                } else if (password.length > 12 || password.length < 6) {
+                    this.errorMsg = "密码长度为 6 到 12 个字符";
+                    return false;
+                }
+                if (checkCode.length == 0) {
+                    this.errorMsg = "请输入验证码";
+                    return false;
+                } else if (checkCode.length != 4) {
+                    this.errorMsg = "请输入4位验证码";
+                    return false;
+                }
+
+            },
+
+            //换角色
+            changeUser(){
+                location.href = "http://localhost:8080/t/login.html?" + new Date().getMilliseconds();
+            }
+        },
+
+        //数据
+        data() {
+            return {
+                checkCodeImg: "/user/checkCode",
+                errorMsg: "",
+                user: {
+                    userName: '',
+                    password: '',
+                    checkCode: ''
+                },
+
+
+            }
+        }
+
+    })
+
+</script>
+
+
+</body>
+</html>

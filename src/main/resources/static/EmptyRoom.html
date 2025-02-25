@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="app">
+    <!--搜索框-->
+    <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+        <el-form-item label="教室名：">
+            <el-input v-model="searchForm.room.roomName" placeholder="模糊查询"></el-input>
+        </el-form-item>
+        <el-form-item label="时间：">
+            <el-select v-model="week" clearable  placeholder="选择星期" style="width:130px">
+                <el-option
+                        clearable
+                        v-for="item in options1"
+                        :key="item.id"
+                        :label="item.weekName"
+                        :value="item.id">
+                </el-option>
+            </el-select>
+            <el-select v-model="time" clearable  placeholder="选择节数" style="width:130px">
+                <el-option
+                        clearable
+                        v-for="item in options2"
+                        :key="item.id"
+                        :label="item.timeName"
+                        :value="item.id">
+                </el-option>
+            </el-select>
+        </el-form-item>
+
+
+        <el-form-item>
+            <el-button type="primary" @click="selectEmptyRoom">查询空教室</el-button>
+        </el-form-item>
+    </el-form>
+
+    <!--    表格-->
+    <el-table
+            :data="tableData"
+            stripe
+            style="width: 100%"
+    >
+
+        <el-table-column
+                type="index"
+                label="排序"
+                align="center">
+        </el-table-column>
+        <el-table-column
+                prop="room.roomName"
+                label="教室名"
+                align="center">
+        </el-table-column>
+        <el-table-column
+                prop="room.capacity"
+                label="容量"
+                align="center">
+        </el-table-column>
+
+        <el-table-column
+                width="80px"
+                prop="timeslot.timeslot"
+                label="时间"
+                align="center">
+        </el-table-column>
+
+        <el-table-column
+                prop="room.remark"
+                label="备注"
+                align="center">
+        </el-table-column>
+
+    </el-table>
+
+    <!--  分页  -->
+    <div class="block">
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[5, 10, 20]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="totalCount">
+        </el-pagination>
+    </div>
+</div>
+
+<!--导入资源-->
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+<script src="js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+        mounted(){
+            this.selectEmptyRoom();
+        },
+        methods:{
+
+            //选中编辑
+            handleEdit(index, row) {
+                //数据填入  利用JSON解除模型绑定
+                this.courseTableForm.timeslot = JSON.parse(JSON.stringify(row)).timeslot;
+                this.courseTableForm.room = JSON.parse(JSON.stringify(row)).room;
+            },
+            //课程查询
+            selectEmptyRoom() {
+                this.searchForm.timeslot.timeId = this.week + this.time;
+                var _this = this;
+                axios({
+                    method: "post",
+                    url: "http://localhost:8080/courseTable/selectEmptyRoom?" +
+                        "currentPage=" + _this.currentPage + "&pageSize=" + _this.pageSize,
+                    data: this.searchForm
+                }).then(function (resp) {
+                    //设置表格数据
+                    _this.tableData = resp.data.list;
+                    _this.totalCount = resp.data.total;
+                })
+            },
+            //课程分页
+            handleSizeChange(val) {
+                //重新设置每页条目数
+                this.pageSize = val;
+                //重新查询
+                this.selectEmptyRoom();
+            },
+            handleCurrentChange(val) {
+                this.currentPage = val;
+                //重新查询
+                this.selectEmptyRoom();
+            },
+
+
+        },
+        data(){
+            return{
+
+                //分配课程
+                //当前页
+                currentPage: 1,
+                //总页数
+                totalCount: 0,
+                //当前条目数
+                pageSize: 5,
+                //搜索表单
+                searchForm: {
+                    task: {
+                        cclasses: {
+                            course: {}
+                        },
+                        teacher: {}
+                    },
+                    timeslot: {
+                        timeId: ''
+                    },
+                    room: {
+                        roomName: ''
+                    }
+                },
+                tableData: [],
+
+                //空教室查询
+                options1: [
+                    {id: 1, weekName: '星期一'}, {id: 6, weekName: '星期二'},
+                    {id: 11, weekName: '星期三'}, {id: 16, weekName: '星期四'},
+                    {id: 21, weekName: '星期五'}, {id: 26, weekName: '星期六'},
+                    {id: 31, weekName: '星期日'},
+                ],
+                options2: [
+                    {id: 0, timeName: '第一大节'}, {id: 1, timeName: '第二大节'},
+                    {id: 2, timeName: '第三大节'}, {id: 3, timeName: '第四大节'},
+                    {id: 4, timeName: '第五大节'},
+                ],
+                week: "",
+                time: "",
+            }
+        }
+
+    })
+</script>
+
+</body>
+</html>

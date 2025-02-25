@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>课程绑定</title>
+</head>
+<body>
+<div id="app">
+  <!--搜索框-->
+  <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+    <el-form-item label="教师名：">
+      <el-input v-model="searchForm.teacher.teacherName" placeholder="模糊查询"></el-input>
+    </el-form-item>
+    <el-form-item label="课程名：">
+      <el-input v-model="searchForm.course.courseName" placeholder="模糊查询"></el-input>
+    </el-form-item>
+
+    <el-form-item>
+      <el-button type="primary" @click="selectByCondition">查询</el-button>
+    </el-form-item>
+  </el-form>
+
+  <!-- 批量    -->
+  <el-row>
+    <el-button type="danger" plain @click="deleteByIds">批量删除</el-button>
+  </el-row>
+
+  <!--    表格-->
+  <el-table
+          :data="tableData"
+          style="width: 100%"
+          @selection-change="handleSelectionChange"
+  >
+    <el-table-column
+            type="selection"
+            width="55">
+    </el-table-column>
+    <el-table-column
+            prop="teacher.id"
+            label="学工号"
+            align="center">
+    </el-table-column>
+    <el-table-column
+            prop="teacher.teacherName"
+            label="教师名"
+            align="center">
+    </el-table-column>
+    <el-table-column
+            prop="course.code"
+            label="课程编码"
+            align="center">
+    </el-table-column>
+    <el-table-column
+            prop="course.courseName"
+            label="课程名"
+            align="center">
+    </el-table-column>
+    <el-table-column
+            prop="remark"
+            label="备注"
+            align="center">
+    </el-table-column>
+
+    <el-table-column label="操作" align="center">
+      <template slot-scope="scope">
+        <el-button
+                size="mini"
+                @click="handleEdit(scope.$index, scope.row)">编辑
+        </el-button>
+        <el-button
+                size="mini"
+                type="danger"
+                @click="handleDelete(scope.$index, scope.row)">删除
+        </el-button>
+      </template>
+    </el-table-column>
+
+  </el-table>
+
+  <!--编辑 对话框   -->
+  <el-dialog title="课程绑定编辑" :visible.sync="updateFormVisible" width="70%">
+    <!--搜索框-->
+    <el-form :inline="true" :model="searchForm2" class="demo-form-inline">
+      <el-form-item label="课程编号：">
+        <el-input v-model="searchForm2.code" placeholder="模糊查询"></el-input>
+      </el-form-item>
+
+      <el-form-item label="课程名：">
+        <el-input v-model="searchForm2.courseName" placeholder="模糊查询"></el-input>
+      </el-form-item>
+
+      <el-form-item>
+        <el-button type="primary" @click="selectByCondition2">查询</el-button>
+      </el-form-item>
+    </el-form>
+    <!--课程表格-->
+    <el-table
+            :data="tableData2"
+            style="width: 100%"
+            @selection-change="handleSelectionChange"
+    >
+      <el-table-column
+              prop="code"
+              label="课程编号"
+              align="center">
+      </el-table-column>
+      <el-table-column
+              prop="courseName"
+              label="课程名"
+              align="center">
+      </el-table-column>
+      <el-table-column
+              prop="remark"
+              label="备注"
+              align="center">
+      </el-table-column>
+
+      <el-table-column label="操作" align="center">
+        <template slot-scope="scope">
+          <el-button
+                  size="mini"
+                  type="primary"
+                  @click="handleEdit2(scope.$index, scope.row)">选中
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!--  分页  -->
+    <div class="block">
+      <el-pagination
+              @size-change="handleSizeChange2"
+              @current-change="handleCurrentChange2"
+              :current-page="currentPage2"
+              :page-sizes="[3, 6, 9]"
+              :page-size="pageSize2"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="totalCount2">
+      </el-pagination>
+    </div>
+
+    <!--选中结果 -->
+    <el-form :inline="true" :model="cTeacherForm" class="demo-form-inline" style="margin-top: 20px">
+      <el-form-item label="教师名">
+        <el-input v-model="cTeacherForm.teacher.teacherName" :disabled="true" style="width:100px"></el-input>
+      </el-form-item>
+
+      <el-form-item label="课程名">
+        <el-input v-model="cTeacherForm.course.courseName" :disabled="true" ></el-input>
+      </el-form-item>
+
+      <el-form-item label="备注">
+        <el-input v-model="cTeacherForm.remark"></el-input>
+      </el-form-item>
+
+      <el-form-item>
+        <el-button type="primary" @click="updateCteacher">提交</el-button>
+      </el-form-item>
+
+    </el-form>
+
+  </el-dialog>
+
+
+  <!--  分页  -->
+  <div class="block">
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-sizes="[5, 10, 15, 20]"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="totalCount">
+    </el-pagination>
+  </div>
+
+</div>
+
+
+<!--导入资源-->
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+<script src="js/axios-0.18.0.js"></script>
+
+
+<script>
+  //创建vue核心对象
+  new Vue({
+    el: "#app",
+    mounted() {
+      this.selectByCondition();
+      //查课程
+      this.selectByCondition2();
+    },
+    methods: {
+
+      //编辑  删除
+      handleEdit(index, row) {
+        //数据填入  利用JSON解除模型绑定
+        this.cTeacherForm = JSON.parse(JSON.stringify(row));
+
+        //打开编辑表单
+        this.updateFormVisible = true;
+      },
+
+      handleDelete(index, row) {
+        this.multipleSelection[0] = row;
+        this.deleteByIds();
+      },
+
+      //查询
+      selectByCondition() {
+        var _this = this;
+        axios({
+          method: "post",
+          url: "http://localhost:8080/cteacher/selectByCondition?"+
+                  "currentPage=" +_this.currentPage+"&pageSize="+_this.pageSize,
+          data: this.searchForm
+        }).then(function (resp) {
+          //设置表格数据
+          _this.tableData = resp.data.list;
+          _this.totalCount = resp.data.total;
+        })
+      },
+
+
+      //分页
+      handleSizeChange(val) {
+        //重新设置每页条目数
+        this.pageSize = val;
+        //重新查询
+        this.selectByCondition();
+      },
+      handleCurrentChange(val) {
+        this.currentPage = val;
+        //重新查询
+        this.selectByCondition();
+      },
+
+
+      //复选事件
+      handleSelectionChange(val) {
+        this.multipleSelection = val;
+      },
+
+      //批量禁用
+      deleteByIds() {
+        var _this = this;
+        //未选中
+        if (this.multipleSelection.length == 0){
+          //弹出消息提示
+          _this.$message({
+            message: '无选中数据项！',
+            type: 'error',
+            center: true
+          });
+        }else {
+          this.$confirm('此操作将删除该数据项，是否继续？', "提示", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning"
+          }).then(() => {
+            //用户点击确认按钮
+            for (let i = 0; i < this.multipleSelection.length; i++) {
+              this.selectIds[i] = this.multipleSelection[i].id;
+            }
+            //发送ajax请求
+            axios({
+              method: "post",
+              url: 'http://localhost:8080/cteacher/deleteByIds',
+              data: _this.selectIds
+            }).then(function (resp) {
+              if (resp.data == "success") {
+                //删除成功重新查询
+                _this.selectByCondition();
+                //弹出消息提示
+                _this.$message({
+                  message: '操作成功',
+                  type: 'success',
+                  center: true
+                });
+              }
+
+            })
+          })
+        }
+
+      },
+
+
+      //提交修改表单
+      updateCteacher() {
+        var _this = this;
+        axios({
+          method: "post",
+          url: "http://localhost:8080/cteacher/update",
+          data: _this.cTeacherForm
+        }).then(function (resp) {
+          if (resp.data == "success") {
+            //关闭弹窗
+            _this.updateFormVisible = false;
+            //重新查询数据
+            _this.selectByCondition();
+            //弹出提示信息
+            _this.$message({
+              message: '修改成功',
+              type: 'success',
+              center: true
+            });
+          }else {
+            //关闭弹窗
+            _this.updateFormVisible = false;
+            //弹出提示信息
+            _this.$message({
+              message: '课程绑定已存在！',
+              type: 'error',
+              center: true
+            });
+          }
+        })
+      },
+
+      //选中编辑
+      handleEdit2(index, row) {
+        //数据填入  利用JSON解除模型绑定
+        this.cTeacherForm.course = JSON.parse(JSON.stringify(row));
+      },
+      //课程查询
+      selectByCondition2() {
+        var _this = this;
+        axios({
+          method: "post",
+          url: "http://localhost:8080/course/selectByCondition?" +
+                  "currentPage=" + _this.currentPage2 + "&pageSize=" + _this.pageSize2,
+          data: this.searchForm2
+        }).then(function (resp) {
+          //设置表格数据
+          _this.tableData2 = resp.data.list;
+          _this.totalCount2 = resp.data.total;
+        })
+      },
+      //课程分页
+      handleSizeChange2(val) {
+        //重新设置每页条目数
+        this.pageSize2 = val;
+        //重新查询
+        this.selectByCondition2();
+      },
+      handleCurrentChange2(val) {
+        this.currentPage2 = val;
+        //重新查询
+        this.selectByCondition2();
+      },
+
+
+
+    },
+
+
+    //数据
+    data() {
+      return {
+        //分页
+        //当前页
+        currentPage: 1,
+        //总页数
+        totalCount: 0,
+        //当前条目数
+        pageSize: 5,
+
+
+        //选着的数组
+        selectIds: [],
+
+        //添加可见
+        addFormVisible: false,
+        //修改可见
+        updateFormVisible: false,
+        searchForm: {
+          teacher:{
+            teacherName:'',
+          },
+          course:{
+            courseName:''
+          }
+        },
+
+        oldName:'',
+        //添加表单
+        cTeacherForm: {
+          id:'',
+          teacher:{
+            id:''
+          },
+          course:{
+            id:''
+          },
+          remark:''
+        },
+
+        //复选的值？
+        multipleSelection: [],
+
+        //表格数据
+        tableData: [],
+
+        //分配课程
+        //当前页
+        currentPage2: 1,
+        //总页数
+        totalCount2: 0,
+        //当前条目数
+        pageSize2: 3,
+        //搜索表单
+        searchForm2: {
+          code: '',
+          courseName: ''
+        },
+        tableData2: [],
+
+      }
+    }
+  })
+
+</script>
+
+
+</body>
+</html>

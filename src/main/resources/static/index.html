@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>高校体育排课系统</title>
+</head>
+<body>
+
+
+<el-container id="app" style="height:100% ;width: 100%">
+    <el-header>
+        <el-col :span="4" >
+            <div id="nav_top_left" >
+                <p style="color: #ffd04b;font-family: 宋体;font-size: 20px">排 课 系 统</p>
+            </div>
+        </el-col>
+        <el-col :span="16">
+            <el-menu :default-active="activeIndex1" class="el-menu-demo"
+                     mode="horizontal" background-color="#464d53"
+                     text-color="#fff"
+                     active-text-color="#ffd04b"
+            >
+                <el-menu-item index="7" @click="changePage('table')">查看课表</el-menu-item>
+                <el-menu-item index="8" @click="changePage('EmptyRoom')">查看空教室</el-menu-item>
+            </el-menu>
+        </el-col>
+
+        <el-col :span="4">
+            <div id="nav_top_right" >
+                欢迎您,{{userName}}!
+                <el-link :underline="false" @click="logout" style="margin-left:30px ;color: white">退出</el-link>
+            </div>
+        </el-col>
+
+    </el-header>
+
+    <el-container style="height: 100%;" >
+        <el-aside width="200px"  >
+            <el-menu :default-active="activeIndex2" class="el-menu-demo"
+                     style="height: 100%" background-color="#545c64"
+                     text-color="#fff"
+                     active-text-color="#ffd04b">
+                <el-submenu index="1">
+                    <template slot="title">班级管理</template>
+                    <el-menu-item index="1-1" @click="changePage('class')">原始班级管理</el-menu-item>
+                    <el-menu-item index="1-2" @click="changePage('classCourse')">课程班级管理</el-menu-item>
+                </el-submenu>
+                <el-submenu index="2">
+                    <template slot="title">教师管理</template>
+                    <el-menu-item index="2-1" @click="changePage('teacher')">基础信息管理</el-menu-item>
+                    <el-menu-item index="2-2" @click="changePage('teacherCourse')">课程绑定管理</el-menu-item>
+                </el-submenu>
+                <el-submenu index="3">
+                    <template slot="title">排课管理</template>
+                    <el-menu-item index="3-1" @click="changePage('task')">教学任务管理</el-menu-item>
+                    <el-menu-item index="3-2" @click="changePage('courseTable')">排课结果管理</el-menu-item>
+                </el-submenu>
+                <el-menu-item index="4" id="room" @click="changePage('room')">教室管理</el-menu-item>
+                <el-menu-item index="5" id="course" @click="changePage('course')">课程管理</el-menu-item>
+                <el-menu-item index="6" id="user" @click="changePage('user')">用户管理</el-menu-item>
+            </el-menu>
+        </el-aside>
+        <el-main>
+            <iframe id="main" :src="mainPage" width="100%" height="100%" frameborder="0"></iframe>
+        </el-main>
+    </el-container>
+
+</el-container>
+
+
+<!--导入资源-->
+<script src="js/vue.js"></script>
+<script src="element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+<link rel="stylesheet" href="css/index.css">
+<script src="js/axios-0.18.0.js"></script>
+
+<script>
+
+
+    //创建vue核心对象
+    new Vue({
+        el: "#app",
+        mounted() {
+            //获取登录状态
+            axios({
+                method:"post",
+                url:"http://localhost:8080/user/checkLogin",
+            }).then(resp=>{
+                this.userName =resp.data;
+            })
+        },
+        methods: {
+            changePage(pageName){
+                this.mainPage= pageName +".html";
+            },
+
+            //退出请求
+            logout(){
+                axios({
+                    method:"post",
+                    url:"http://localhost:8080/user/logout"
+                }).then(resp=>{
+                    console.log(resp.data);
+                    if (resp.data == "success"){
+                        location.href="login.html"
+                    }
+                })
+            }
+
+        },
+        data() {
+            return {
+                userName:"",
+                mainPage:"class.html",
+                activeIndex1: '',
+                activeIndex2: '1-1',
+            }
+        }
+    })
+
+</script>
+
+</body>
+</html>
