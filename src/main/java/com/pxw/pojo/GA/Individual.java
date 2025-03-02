@@ -32,47 +32,34 @@ public class Individual {
 
         //教学任务循环
         for (Task task : bootstrap.getTasksAsArray()){
-            // 定义可选的起始节次（两节连排和四节连排）
-            int[] availableStartTimesTwo = {1, 3, 5, 7}; // 两节连排课程的起始节次
-            int[] availableStartTimesFour = {1, 3, 5};  // 四节连排课程的起始节次
-
             int timeslotId = -1;
 
-            // 根据课程类型选择合适的起始节次,A=体育，B=实验课，C=普通课程
+            // 根据课程类型选择合适的起始节次,A=体育，B=实验课，其余为普通
 //            System.out.println("task: " + task);
 //            System.out.println("Cclasses: " + (task.getCclasses() != null ? task.getCclasses() : "null"));
 //            System.out.println("Course: " + (task.getCclasses() != null ? task.getCclasses().getCourse() : "null"));
 
-            if(task.getCclasses().getCourse().getRemark() == null){
+            if (task.requiresConsecutive()) {
+                int consecutiveCount = task.getConsecutiveCount(); // 2或4
+                int[] availableStartTimes = consecutiveCount == 2
+                        ? new int[]{1, 3, 5, 7}
+                        : new int[]{1, 3, 5};  // 2和4两种连排要求
+
+                int startIndex = (int) (Math.random() * availableStartTimes.length);
+                int startPeriod = availableStartTimes[startIndex];
+
+                // 随机选择一个星期几（这里原来使用 (int)(Math.random()*5)+1 表示周一到周五）
+                int day = (int) (Math.random() * 5) + 1;
+
+                // 确保连排课程在同一天内：startPeriod + (consecutiveCount - 1) 不超过8
+                if (startPeriod + consecutiveCount - 1 <= 8) {
+                    timeslotId = (day - 1) * 8 + startPeriod;
+                } else {
+                    timeslotId = -1; // 无法选到合适的时间段
+                }
+            } else {
+                // 非连排课程，随机选择时间段
                 timeslotId = bootstrap.getRandomTimeslot().getId();
-            } else if (task.getCclasses().getCourse().getRemark().equals("B")) {
-                // 实验课程需要四节连排，选择四节连排的起始节次
-                int startIndex = (int) (Math.random() * availableStartTimesFour.length);
-                int startPeriod = availableStartTimesFour[startIndex];
-
-                // 随机选择一个星期几（1-7），确保后续三节课程都在该星期的范围内
-                int day = (int) (Math.random() * 5) + 1; // 星期几，范围 1-7
-
-                // 计算四节连排课程的起始时间段
-                if (startPeriod + 3 <= 8) { // 确保四节课在同一天内
-                    timeslotId = (day - 1) * 8 + startPeriod; // 计算具体的时间段ID
-                } else {
-                    timeslotId = -1; // 如果无法选择有效的时间段，返回-1
-                }
-            } else if (task.getCclasses().getCourse().getRemark().equals("A")) {
-                // 其他课程选择两节连排的起始节次
-                int startIndex = (int) (Math.random() * availableStartTimesTwo.length);
-                int startPeriod = availableStartTimesTwo[startIndex];
-
-                // 随机选择一个星期几（1-7），确保后续一节课程在同一天内
-                int day = (int) (Math.random() * 5) + 1; // 星期几，范围 1-7
-
-                // 计算两节连排课程的起始时间段
-                if (startPeriod + 1 <= 8) { // 确保两节课在同一天内
-                    timeslotId = (day - 1) * 8 + startPeriod; // 计算具体的时间段ID
-                } else {
-                    timeslotId = -1; // 如果无法选择有效的时间段，返回-1
-                }
             }
 
             newChromosome[chromosomeIndex] = timeslotId;

@@ -171,6 +171,26 @@ public class Bootstrap {
                 }
             }
 
+            // 假设如果该课程需要连排，则要求其上课节次必须从规定的起始节开始
+            if(tableA.getTask().requiresConsecutive()){
+                int requiredCount = tableA.getTask().getConsecutiveCount(); // 比如 2 或 4
+                int timeslotId = tableA.getTimeslot().getId();
+                // 计算当前时间段在一天中的节次（1~8）
+                int period = ((timeslotId - 1) % 8) + 1;
+
+                // 根据要求判断允许的起始节次
+                if(requiredCount == 2){
+                    // 两节连排允许的起始节次：1, 3, 5, 7
+                    if(!(period == 1 || period == 3 || period == 5 || period == 7)){
+                        clashes++; // 违背连排约束，增加惩罚
+                    }
+                } else if(requiredCount == 4){
+                    // 四节连排允许的起始节次：1, 3, 5
+                    if(!(period == 1 || period == 3 || period == 5)){
+                        clashes++;
+                    }
+                }
+            }
 
         }
         return clashes;

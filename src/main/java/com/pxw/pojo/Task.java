@@ -73,6 +73,25 @@ public class Task {
         this.weekNode = weekNode;
     }
 
+    // 判断该任务的课程是否需要连排
+    public boolean requiresConsecutive() {
+        // 从 cclasses 关联的 Course 中获取 remark 属性
+        String remark = this.getCclasses().getCourse().getRemark();
+        // 当 remark 为 "A" 或 "B" 时认为需要连排
+        return "A".equals(remark) || "B".equals(remark);
+    }
+
+    // 返回需要连续的节数，如果不需要连排则返回 0
+    public int getConsecutiveCount() {
+        String remark = this.getCclasses().getCourse().getRemark();
+        if ("A".equals(remark)) {
+            return 2;
+        } else if ("B".equals(remark)) {
+            return 4;
+        }
+        return 0;
+    }
+
     @Override
     public String toString() {
         return "Task{" +
