@@ -1,9 +1,9 @@
 #datasource
 spring:
   datasource:   #  &amp; -> & useSSL=false要放在最后
-    url: jdbc:mysql://localhost:3306/pxw_bs?serverTimezone=UTC&characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://localhost:3306/pxw_demo3?serverTimezone=UTC&characterEncoding=utf8&useSSL=false
     username: root
-    password: root
+    password: 123456
     driver-class-name: com.mysql.jdbc.Driver
   web:
     resources:
@@ -13,5 +13,13 @@ mybatis:
   config-location: #指定核心配置文件
   mapper-locations: classpath:mapper/*Mapper.xml  #mapper映射文件路径
   type-aliases-package: com.pxw.pojo  #类型别名
-  
+
+#  # 添加 MyBatis 的日志实现配置
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#
+## 设置 MyBatis 包下的日志级别
+#logging:
+#  level:
+#    org.apache.ibatis: debug
 

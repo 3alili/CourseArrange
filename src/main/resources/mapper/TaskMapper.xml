@@ -15,13 +15,14 @@
         <result property="cclasses.course.id" column="c_id" />
         <result property="cclasses.course.courseName" column="c_name"/>
         <result property="cclasses.course.code" column="c_code"/>
+        <result property="cclasses.course.remark" column="c_remark"/>
     </resultMap>
 
     <select id="selectAll" resultMap="TaskResultMap">
         select task.id id ,start_week ,end_week ,week_node,
         teacher.id t_id ,t_name ,
         task.cc_id,cc_name,cc_size,
-        c_id,c_code,c_name
+        c_id,c_code,c_name,course.c_remark as c_remark
         from task, teacher, course, classes_course
         where
             task.cc_id = classes_course.cc_id

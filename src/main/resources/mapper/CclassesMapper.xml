@@ -12,6 +12,8 @@
             <result property="id" column="c_id"/>
             <result property="code" column="c_code"/>
             <result property="courseName" column="c_name"/>
+            <result property="remark" column="c_remark"/>
+
         </association>
     </resultMap>
 
